@@ -233,6 +233,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * The default initial capacity - MUST be a power of two.
+     *
+     * <p>
+     *     默认初始容量 - 必须是 2 的幂。
+     *     当为2的幂的时候 hash % 数组长度 = h & (长度-1) 既提高计算机运效率同时也快速定位,
+     *     当一个二进制数与全为1的数进行按位与时，其结果就是该数本身并且小于等于桶的最大数量。
+     * </p>
      */
     static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
 
@@ -240,6 +246,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * The maximum capacity, used if a higher value is implicitly specified
      * by either of the constructors with arguments.
      * MUST be a power of two <= 1<<30.
+     *
+     * <p>
+     *     最大容量，如果一个更高的值由任何一个带参数的构造函数隐式指定时使用。
+     *     必须是 2 <= 1<<30 的幂。
+     * </p>
      */
     static final int MAXIMUM_CAPACITY = 1 << 30;
 
@@ -259,6 +270,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * than 2 and should be at least 8 to mesh with assumptions in
      * tree removal about conversion back to plain bins upon
      * shrinkage.
+     *
+     * <p>
+     *     使用树而不是列表的 bin(bucketed: 桶) 计数阈值。 将元素添加到至少具有这么多节点的 bin 时，bin 将转换为树。
+     *     该值必须大于 2 并且应该至少为 8，以便与树移除中关于在收缩时转换回普通 bin 的假设相吻合。
+     * </p>
      */
     static final int TREEIFY_THRESHOLD = 8;
 
@@ -266,6 +282,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * The bin count threshold for untreeifying a (split) bin during a
      * resize operation. Should be less than TREEIFY_THRESHOLD, and at
      * most 6 to mesh with shrinkage detection under removal.
+     *
+     * <p>
+     *     在调整大小操作期间 untreeifying（拆分）bin 的 bin 计数阈值。 应小于 TREEIFY_THRESHOLD，并且最多 6 以在移除时进行收缩检测。
+     * </p>
      */
     static final int UNTREEIFY_THRESHOLD = 6;
 
@@ -274,6 +294,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * (Otherwise the table is resized if too many nodes in a bin.)
      * Should be at least 4 * TREEIFY_THRESHOLD to avoid conflicts
      * between resizing and treeification thresholds.
+     *
+     * <p>
+     *     可对其进行树化的 bin 的最小表容量。 （否则，如果 bin 中有太多节点，则调整表的大小。）
+     *     应至少为 4 * TREEIFY_THRESHOLD 以避免调整大小和树化阈值之间的冲突。
+     * </p>
      */
     static final int MIN_TREEIFY_CAPACITY = 64;
 
@@ -335,9 +360,27 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * cheapest possible way to reduce systematic lossage, as well as
      * to incorporate impact of the highest bits that would otherwise
      * never be used in index calculations because of table bounds.
+     *
+     * <p>
+     *     计算key.hashCode()并将hash的高位分散到低位。
+     *     由于该表使用了2次方掩码，仅在当前掩码以上的位数不同的哈希值集将总是发生碰撞。(已知的例子包括在小表中持有连续整数的Float键的集合）。
+     *     因此，我们应用一个转换，将高位的影响向下分散。在速度、实用性和位传播的质量之间有一个权衡。
+     *     因为许多常见的哈希集已经是合理分布的（所以不受益于传播），而且因为我们使用树来处理bin中的大型碰撞集，
+     *     我们只是以最便宜的方式XOR一些移位的比特，以减少系统损失，以及纳入最高比特的影响，否则由于表的界限，永远不会被用于索引计算中
+     * </p>
      */
     static final int hash(Object key) {
         int h;
+        /**
+         * 如果key不为null，调用其hashCode()方法获取hashCode的值作为h的值，
+         * 之后h右移16位与原h进行异或运算（高 16bit 不变，低 16bit 和高 16bit 做异或）。
+         * 让key的hash值的高16位参与路由运算
+         *
+         * h >>> 16: h变为高16位
+         *
+         * 右位移 16 位，正好是 32bit 的一半（int 是 32 位的），自己的高半区和低半区做异或，就是为了混合原始哈希码的高位和低位，
+         * 以此来加大低位的随机性。而且混合后的低位掺杂了高位的部分特征，这样高位的信息也变相保留下来。
+         */
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
@@ -376,10 +419,30 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Returns a power of two size for the given target capacity.
+     *
+     * <p>
+     *     返回给定目标容量的 2 次方。
+     * </p>
      */
     static final int tableSizeFor(int cap) {
-        int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1);
-        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+        /*
+        numberOfLeadingZeros()返回无符号整数i的最高非0位前面的0的个数，包括符号位在内；
+        如果i为负数，这个方法将会返回0，符号位为1。
+
+        cap - 1 处理cap本身为2的n次幂的情况
+         */
+        /*
+        Java 8:
+        int n = c - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        https://guopengd.github.io/posts/hashMap-tableSizeFor/
+         */
+        int n = -1 >>> Integer.numberOfLeadingZeros(cap - 1); // n = 32个1 右移 二进制中前导0的个数
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1; // n + 1 为2的此幂
     }
 
     /* ---------------- Fields -------------- */
@@ -668,12 +731,20 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             else if (p instanceof TreeNode)
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
             else {
+                /*
+                遍历链表
+                 */
                 for (int binCount = 0; ; ++binCount) {
                     /*
                     如果到链表末尾未找到key
                      */
                     if ((e = p.next) == null) {
-                        p.next = newNode(hash, key, value, null);
+                        /*
+                        Java 7:
+                        Entry<K,V> e = table[bucketIndex];
+                        table[bucketIndex] = new Entry<>(hash, key, value, e);
+                         */
+                        p.next = newNode(hash, key, value, null); // 尾插法
                         /*
                         如果桶的个数大于等于阈值将其转换为红黑树
                         bincount少算了第一个节点,所以需要减1
