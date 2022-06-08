@@ -232,60 +232,32 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
 
     /**
-     * The default initial capacity - MUST be a power of two.
-     *
-     * <p>
-     *     默认初始容量 - 必须是 2 的幂。
-     *     当为2的幂的时候 hash % 数组长度 = h & (长度-1) 既提高计算机运效率同时也快速定位,
-     *     当一个二进制数与全为1的数进行按位与时，其结果就是该数本身并且小于等于桶的最大数量。
-     * </p>
+     * 默认初始容量 - 必须是 2 的幂。
+     * 当为2的幂的时候 hash % 数组长度 = h & (长度-1) 既提高计算机运效率同时也快速定位,
+     * 当一个二进制数与全为1的数进行按位与时，其结果就是该数本身并且小于等于桶的最大数量。
      */
     static final int DEFAULT_INITIAL_CAPACITY = 1 << 4; // aka 16
 
     /**
-     * The maximum capacity, used if a higher value is implicitly specified
-     * by either of the constructors with arguments.
-     * MUST be a power of two <= 1<<30.
-     *
-     * <p>
-     *     最大容量，如果一个更高的值由任何一个带参数的构造函数隐式指定时使用。
-     *     必须是 2 <= 1<<30 的幂。
-     * </p>
+     * 最大容量，如果一个更高的值由任何一个带参数的构造函数隐式指定时使用。
+     * 必须是 2 <= 1<<30 的幂。
      */
     static final int MAXIMUM_CAPACITY = 1 << 30;
 
     /**
-     * The load factor used when none specified in constructor.
-     *
-     * <p>
-     *     构造函数中未指定时使用的负载因子。
-     * </p>
+     * 构造函数中未指定时使用的负载因子。
      */
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
     /**
-     * The bin count threshold for using a tree rather than list for a
-     * bin.  Bins are converted to trees when adding an element to a
-     * bin with at least this many nodes. The value must be greater
-     * than 2 and should be at least 8 to mesh with assumptions in
-     * tree removal about conversion back to plain bins upon
-     * shrinkage.
-     *
-     * <p>
-     *     使用树而不是列表的 bin(bucketed: 桶) 计数阈值。 将元素添加到至少具有这么多节点的 bin 时，bin 将转换为树。
-     *     该值必须大于 2 并且应该至少为 8，以便与树移除中关于在收缩时转换回普通 bin 的假设相吻合。
-     * </p>
+     * 使用树而不是列表的 bin(bucketed: 桶) 计数阈值。 将元素添加到至少具有这么多节点的 bin 时，bin 将转换为树。
+     * 该值必须大于 2 并且应该至少为 8，以便与树移除中关于在收缩时转换回普通 bin 的假设相吻合。
      */
     static final int TREEIFY_THRESHOLD = 8;
 
     /**
-     * The bin count threshold for untreeifying a (split) bin during a
-     * resize operation. Should be less than TREEIFY_THRESHOLD, and at
-     * most 6 to mesh with shrinkage detection under removal.
+     * 在调整大小操作期间 untreeifying（拆分）bin 的 bin 计数阈值。 应小于 TREEIFY_THRESHOLD，并且最多 6 以在移除时进行收缩检测。
      *
-     * <p>
-     *     在调整大小操作期间 untreeifying（拆分）bin 的 bin 计数阈值。 应小于 TREEIFY_THRESHOLD，并且最多 6 以在移除时进行收缩检测。
-     * </p>
      */
     static final int UNTREEIFY_THRESHOLD = 6;
 
@@ -346,40 +318,24 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /* ---------------- Static utilities -------------- */
 
     /**
-     * Computes key.hashCode() and spreads (XORs) higher bits of hash
-     * to lower.  Because the table uses power-of-two masking, sets of
-     * hashes that vary only in bits above the current mask will
-     * always collide. (Among known examples are sets of Float keys
-     * holding consecutive whole numbers in small tables.)  So we
-     * apply a transform that spreads the impact of higher bits
-     * downward. There is a tradeoff between speed, utility, and
-     * quality of bit-spreading. Because many common sets of hashes
-     * are already reasonably distributed (so don't benefit from
-     * spreading), and because we use trees to handle large sets of
-     * collisions in bins, we just XOR some shifted bits in the
-     * cheapest possible way to reduce systematic lossage, as well as
-     * to incorporate impact of the highest bits that would otherwise
-     * never be used in index calculations because of table bounds.
-     *
-     * <p>
-     *     计算key.hashCode()并将hash的高位分散到低位。
-     *     由于该表使用了2次方掩码，仅在当前掩码以上的位数不同的哈希值集将总是发生碰撞。(已知的例子包括在小表中持有连续整数的Float键的集合）。
-     *     因此，我们应用一个转换，将高位的影响向下分散。在速度、实用性和位传播的质量之间有一个权衡。
-     *     因为许多常见的哈希集已经是合理分布的（所以不受益于传播），而且因为我们使用树来处理bin中的大型碰撞集，
-     *     我们只是以最便宜的方式XOR一些移位的比特，以减少系统损失，以及纳入最高比特的影响，否则由于表的界限，永远不会被用于索引计算中
-     * </p>
+     * 计算key.hashCode()并将hash的高位分散到低位。
+     * 由于该表使用了2次方掩码，仅在当前掩码以上的位数不同的哈希值集将总是发生碰撞。(已知的例子包括在小表中持有连续整数的Float键的集合）。
+     * 因此，我们应用一个转换，将高位的影响向下分散。在速度、实用性和位传播的质量之间有一个权衡。
+     * 因为许多常见的哈希集已经是合理分布的（所以不受益于传播），而且因为我们使用树来处理bin中的大型碰撞集，
+     * 我们只是以最便宜的方式XOR一些移位的比特，以减少系统损失，以及纳入最高比特的影响，否则由于表的界限，永远不会被用于索引计算中
+
      */
     static final int hash(Object key) {
         int h;
-        /**
-         * 如果key不为null，调用其hashCode()方法获取hashCode的值作为h的值，
-         * 之后h右移16位与原h进行异或运算（高 16bit 不变，低 16bit 和高 16bit 做异或）。
-         * 让key的hash值的高16位参与路由运算
-         *
-         * h >>> 16: h变为高16位
-         *
-         * 右位移 16 位，正好是 32bit 的一半（int 是 32 位的），自己的高半区和低半区做异或，就是为了混合原始哈希码的高位和低位，
-         * 以此来加大低位的随机性。而且混合后的低位掺杂了高位的部分特征，这样高位的信息也变相保留下来。
+        /*
+         如果key不为null，调用其hashCode()方法获取hashCode的值作为h的值，
+         之后h右移16位与原h进行异或运算（高 16bit 不变，低 16bit 和高 16bit 做异或）。
+         让key的hash值的高16位参与路由运算
+
+         h >>> 16: h变为高16位
+
+         右位移 16 位，正好是 32bit 的一半（int 是 32 位的），自己的高半区和低半区做异或，就是为了混合原始哈希码的高位和低位，
+         以此来加大低位的随机性。而且混合后的低位掺杂了高位的部分特征，这样高位的信息也变相保留下来。
          */
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
@@ -418,11 +374,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Returns a power of two size for the given target capacity.
-     *
-     * <p>
-     *     返回给定目标容量的 2 次方。
-     * </p>
+     * 返回给定目标容量的 2 次方。
      */
     static final int tableSizeFor(int cap) {
         /*
@@ -448,15 +400,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     /* ---------------- Fields -------------- */
 
     /**
-     * The table, initialized on first use, and resized as
-     * necessary. When allocated, length is always a power of two.
-     * (We also tolerate length zero in some operations to allow
-     * bootstrapping mechanics that are currently not needed.)
-     *
-     * <p>
-     *     该表在首次使用时初始化，并根据需要调整大小。
-     *     分配时，长度始终是 2 的幂。 （我们还在某些操作中允许长度为零，以允许当前不需要的引导机制。）
-     * </p>
+     * 该表在首次使用时初始化，并根据需要调整大小。
+     * 分配时，长度始终是 2 的幂。 （我们还在某些操作中允许长度为零，以允许当前不需要的引导机制。）
      */
     transient Node<K,V>[] table;
 
@@ -481,11 +426,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     transient int modCount;
 
     /**
-     * The next size value at which to resize (capacity * load factor).
-     *
-     * <p>
-     *     要调整大小的下一个大小值（容量 * 负载因子）。
-     * </p>
+     * 要调整大小的下一个大小值（容量 * 负载因子）。
      *
      * @serial
      */
@@ -538,14 +479,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Constructs an empty {@code HashMap} with the default initial capacity
-     * (16) and the default load factor (0.75).
-     *
-     * <p>
-     *     构造一个具有默认初始容量 (16) 和默认加载因子 (0.75) 的空 {@code HashMap} 。
-     * </p>
-     *
-     *
+     * 构造一个具有默认初始容量 (16) 和默认加载因子 (0.75) 的空 {@code HashMap} 。
      */
     public HashMap() {
         this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
@@ -647,12 +581,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] tab; Node<K,V> first, e; int n, hash; K k;
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (first = tab[(n - 1) & (hash = hash(key))]) != null) {
-            if (first.hash == hash && // always check first node
+            if (first.hash == hash && // 表中的第一个元素
                 ((k = first.key) == key || (key != null && key.equals(k))))
                 return first;
+            /*
+            hash冲突，从链表或树中查找
+             */
             if ((e = first.next) != null) {
                 if (first instanceof TreeNode)
                     return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+                /*
+                迭代链表
+                 */
                 do {
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
@@ -692,11 +632,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Implements Map.put and related methods.
-     *
-     * <p>
-     *     实现 Map.put 和相关方法。
-     * </p>
+     * 实现 Map.put 和相关方法。
      *
      * @param hash hash for key
      * @param key the key
@@ -787,17 +723,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
-     * Initializes or doubles table size.  If null, allocates in
-     * accord with initial capacity target held in field threshold.
-     * Otherwise, because we are using power-of-two expansion, the
-     * elements from each bin must either stay at same index, or move
-     * with a power of two offset in the new table.
-     *
-     * <p>
-     *     初始化或加倍table的大小。
-     *     如果为空，则按照字段阈值中保存的初始容量目标进行分配。
-     *     否则，因为我们使用二次幂展开，每个 bin(bucketed: 桶) 中的元素必须保持相同的索引，或者在新表中以二次幂的偏移量移动。
-     * </p>
+     * 初始化或加倍table的大小。
+     * 如果为空，则按照字段阈值中保存的初始容量目标进行分配。
+     * 否则，因为我们使用二次幂展开，每个 bin(bucketed: 桶) 中的元素必须保持相同的索引，或者在新表中以二次幂的偏移量移动。
      *
      * @return the table
      */
@@ -934,20 +862,29 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final void treeifyBin(Node<K,V>[] tab, int hash) {
         int n, index; Node<K,V> e;
+        /*
+        如果当前数组为空或者数组长度小于树化最小阈值（64），扩容
+         */
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
             resize();
         else if ((e = tab[index = (n - 1) & hash]) != null) {
             TreeNode<K,V> hd = null, tl = null;
+            /*
+            线索化, 为每个二叉树的节点添加前驱和后继节点，形成线索
+             */
             do {
-                TreeNode<K,V> p = replacementTreeNode(e, null);
+                TreeNode<K,V> p = replacementTreeNode(e, null); // Node 转TreeNode, 内容与e相同
                 if (tl == null)
                     hd = p;
                 else {
-                    p.prev = tl;
-                    tl.next = p;
+                    p.prev = tl; // 将上一个节点p赋值给现在的p的前一个节点
+                    tl.next = p; // 将现在节点p作为树的尾节点的下一个节点
                 }
                 tl = p;
             } while ((e = e.next) != null);
+            /*
+            将已经线索化的链表转化为红黑树
+             */
             if ((tab[index] = hd) != null)
                 hd.treeify(tab);
         }
@@ -2131,9 +2068,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
 
         /**
-         * Returns root of tree containing this node.
+         * 返回包含此节点的树的根。
          */
         final TreeNode<K,V> root() {
+            /*
+            从该节点上寻找根
+             */
             for (TreeNode<K,V> r = this, p;;) {
                 if ((p = r.parent) == null)
                     return r;
@@ -2202,6 +2142,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          * Calls find for root node.
          */
         final TreeNode<K,V> getTreeNode(int h, Object k) {
+            /*
+            从树的根开始查找
+             */
             return ((parent != null) ? root() : this).find(h, k, null);
         }
 
