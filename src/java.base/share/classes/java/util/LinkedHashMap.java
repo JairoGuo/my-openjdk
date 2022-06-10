@@ -190,7 +190,7 @@ public class LinkedHashMap<K,V>
      * HashMap.Node subclass for normal LinkedHashMap entries.
      */
     static class Entry<K,V> extends HashMap.Node<K,V> {
-        Entry<K,V> before, after;
+        Entry<K,V> before, after; // 双向链表指针
         Entry(int hash, K key, V value, Node<K,V> next) {
             super(hash, key, value, next);
         }
@@ -200,18 +200,18 @@ public class LinkedHashMap<K,V>
     private static final long serialVersionUID = 3801124242820219131L;
 
     /**
-     * The head (eldest) of the doubly linked list.
+     * 双向链表的头部（最大的: eldest）
      */
     transient LinkedHashMap.Entry<K,V> head;
 
     /**
-     * The tail (youngest) of the doubly linked list.
+     * 双向链表的尾部（最小: youngest）。
      */
     transient LinkedHashMap.Entry<K,V> tail;
 
     /**
-     * The iteration ordering method for this linked hash map: {@code true}
-     * for access-order, {@code false} for insertion-order.
+     * 此链接哈希映射的迭代排序方法：访问顺序为{@code true} ，插入顺序为{@code false} 。
+     * 为true则每次被访问的节点都会放到链表尾部
      *
      * @serial
      */
@@ -219,7 +219,7 @@ public class LinkedHashMap<K,V>
 
     // internal utilities
 
-    // link at the end of list
+    // 把节点插入到链表尾部
     private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
         LinkedHashMap.Entry<K,V> last = tail;
         tail = p;
@@ -231,7 +231,7 @@ public class LinkedHashMap<K,V>
         }
     }
 
-    // apply src's links to dst
+    // 将 src 替换为 dst
     private void transferLinks(LinkedHashMap.Entry<K,V> src,
                                LinkedHashMap.Entry<K,V> dst) {
         LinkedHashMap.Entry<K,V> b = dst.before = src.before;
@@ -253,6 +253,9 @@ public class LinkedHashMap<K,V>
         head = tail = null;
     }
 
+    /**
+     * 创建新链表节点
+     */
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
         LinkedHashMap.Entry<K,V> p =
             new LinkedHashMap.Entry<>(hash, key, value, e);
@@ -260,6 +263,9 @@ public class LinkedHashMap<K,V>
         return p;
     }
 
+    /**
+     * 替换链表节点
+     */
     Node<K,V> replacementNode(Node<K,V> p, Node<K,V> next) {
         LinkedHashMap.Entry<K,V> q = (LinkedHashMap.Entry<K,V>)p;
         LinkedHashMap.Entry<K,V> t =
@@ -281,6 +287,9 @@ public class LinkedHashMap<K,V>
         return t;
     }
 
+    /**
+     * 删除节点
+     */
     void afterNodeRemoval(Node<K,V> e) { // unlink
         LinkedHashMap.Entry<K,V> p =
             (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
@@ -295,6 +304,10 @@ public class LinkedHashMap<K,V>
             a.before = b;
     }
 
+    /**
+     * 移除最少使用的节点
+     * @param evict 是否移除最少使用的节点
+     */
     void afterNodeInsertion(boolean evict) { // possibly remove eldest
         LinkedHashMap.Entry<K,V> first;
         if (evict && (first = head) != null && removeEldestEntry(first)) {
@@ -303,8 +316,14 @@ public class LinkedHashMap<K,V>
         }
     }
 
+    /**
+     * 把节点移动到链表尾
+     */
     void afterNodeAccess(Node<K,V> e) { // move node to last
         LinkedHashMap.Entry<K,V> last;
+        /*
+        仅当accessOrder为true且被访问元素不是尾节点
+         */
         if (accessOrder && (last = tail) != e) {
             LinkedHashMap.Entry<K,V> p =
                 (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
@@ -405,8 +424,8 @@ public class LinkedHashMap<K,V>
 
 
     /**
-     * Returns {@code true} if this map maps one or more keys to the
-     * specified value.
+     * 如果此映射将一个或多个键映射到指定值，则返回{@code true}。
+     * 检查LinkedHashMap是否包含指定value
      *
      * @param value value whose presence in this map is to be tested
      * @return {@code true} if this map maps one or more keys to the
@@ -435,6 +454,12 @@ public class LinkedHashMap<K,V>
      * possible that the map explicitly maps the key to {@code null}.
      * The {@link #containsKey containsKey} operation may be used to
      * distinguish these two cases.
+     *
+     * 返回指定键映射到的值，如果此映射不包含该键的映射，则返回{@code null} 。
+     * 更正式地说，如果此映射包含从键{@code k} 到值{@code v}的映射，使得{@code (key==null ? k==null : key.equals(k))} ，则此方法返回{@code v}；
+     * 否则返回{@code null} 。 （最多可以有一个这样的映射。）
+     * 返回值为{@code null}并不一定表示该映射不包含该键的映射；地图也有可能将键显式映射到{@code null} 。
+     * {@link #containsKey containsKey}操作可用于区分这两种情况。
      */
     public V get(Object key) {
         Node<K,V> e;
