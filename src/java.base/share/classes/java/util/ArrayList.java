@@ -113,32 +113,30 @@ public class ArrayList<E> extends AbstractList<E>
     private static final long serialVersionUID = 8683452581122892189L;
 
     /**
-     * Default initial capacity.
+     * 默认初始容量。
      */
     private static final int DEFAULT_CAPACITY = 10;
 
     /**
-     * Shared empty array instance used for empty instances.
+     * 用于空实例的共享空数组实例。
      */
     private static final Object[] EMPTY_ELEMENTDATA = {};
 
     /**
-     * Shared empty array instance used for default sized empty instances. We
-     * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
-     * first element is added.
+     * 用于默认大小的空实例的共享空数组实例。
+     * 我们将其与 EMPTY_ELEMENTDATA 区分开来，以了解添加第一个元素时要膨胀多少。
      */
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 
     /**
-     * The array buffer into which the elements of the ArrayList are stored.
-     * The capacity of the ArrayList is the length of this array buffer. Any
-     * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
-     * will be expanded to DEFAULT_CAPACITY when the first element is added.
+     * ArrayList 的元素存储在其中的数组缓冲区。
+     * ArrayList 的容量就是这个数组缓冲区的长度。
+     * 添加第一个元素时，任何带有 elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA 的空 ArrayList 都将扩展为 DEFAULT_CAPACITY。
      */
     transient Object[] elementData; // non-private to simplify nested class access
 
     /**
-     * The size of the ArrayList (the number of elements it contains).
+     * ArrayList 的大小（它包含的元素数）。
      *
      * @serial
      */
@@ -163,7 +161,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Constructs an empty list with an initial capacity of ten.
+     * 构造一个初始容量为 10 的空列表。
      */
     public ArrayList() {
         this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
@@ -192,12 +190,14 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Trims the capacity of this {@code ArrayList} instance to be the
-     * list's current size.  An application can use this operation to minimize
-     * the storage of an {@code ArrayList} instance.
+     * 将此 {@code ArrayList} 实例的容量修剪为列表的当前大小。
+     * 应用程序可以使用此操作来最小化 {@code ArrayList} 实例的存储
      */
     public void trimToSize() {
         modCount++;
+        /*
+        列表元素个数小于容量大小进行裁剪
+         */
         if (size < elementData.length) {
             elementData = (size == 0)
               ? EMPTY_ELEMENTDATA
@@ -206,13 +206,14 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Increases the capacity of this {@code ArrayList} instance, if
-     * necessary, to ensure that it can hold at least the number of elements
-     * specified by the minimum capacity argument.
+     * 如有必要，增加此{@code ArrayList}实例的容量，以确保它至少可以容纳最小容量参数指定的元素数量。
      *
      * @param minCapacity the desired minimum capacity
      */
     public void ensureCapacity(int minCapacity) {
+        /*
+        minCapacity 大于 elementData容量大小 并且（elementData不为空，minCapacity大于10）
+         */
         if (minCapacity > elementData.length
             && !(elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
                  && minCapacity <= DEFAULT_CAPACITY)) {
@@ -222,19 +223,33 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Increases the capacity to ensure that it can hold at least the
-     * number of elements specified by the minimum capacity argument.
+     * 增加容量以确保它至少可以容纳最小容量参数指定的元素数量
      *
-     * @param minCapacity the desired minimum capacity
+     * @param minCapacity 所需的最小容量
      * @throws OutOfMemoryError if minCapacity is less than zero
      */
     private Object[] grow(int minCapacity) {
-        int oldCapacity = elementData.length;
+        int oldCapacity = elementData.length; // 扩容前容量
+        /*
+        容量不为空时进行扩容
+         */
         if (oldCapacity > 0 || elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            /*
+            ArraysSupport.newLength(给定数组的当前长度, 最小增长量, 首选增长量)，计算新的数组长度。
+
+            add进行扩容是minCapacity = size + 1， oldCapacity = size，最小增长量总为1
+
+            首选增长为 size / 2，newCapacity = oldCapacity + oldCapacity / 2
+            容量被扩容到1.5倍
+             */
             int newCapacity = ArraysSupport.newLength(oldCapacity,
                     minCapacity - oldCapacity, /* minimum growth */
                     oldCapacity >> 1           /* preferred growth */);
             return elementData = Arrays.copyOf(elementData, newCapacity);
+        /*
+        第一次扩容
+        如果elementData（DEFAULTCAPACITY_EMPTY_ELEMENTDATA）为空分配容量为10或更大容量
+         */
         } else {
             return elementData = new Object[Math.max(DEFAULT_CAPACITY, minCapacity)];
         }
@@ -281,6 +296,9 @@ public class ArrayList<E> extends AbstractList<E>
      * More formally, returns the lowest index {@code i} such that
      * {@code Objects.equals(o, get(i))},
      * or -1 if there is no such index.
+     *
+     * 返回此列表中指定元素第一次出现的索引，如果此列表不包含该元素，则返回 -1。
+     * 更正式地说，返回最低索引 {@code i} 使得 {@code Objects.equals(o, get(i))}，如果没有这样的索引，则返回 -1。
      */
     public int indexOf(Object o) {
         return indexOfRange(o, 0, size);
@@ -429,8 +447,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Replaces the element at the specified position in this list with
-     * the specified element.
+     * 将此列表中指定位置的元素替换为指定元素。
      *
      * @param index index of the element to replace
      * @param element element to be stored at the specified position
@@ -438,8 +455,8 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
     public E set(int index, E element) {
-        Objects.checkIndex(index, size);
-        E oldValue = elementData(index);
+        Objects.checkIndex(index, size); // index 是否在 0 到 size之间
+        E oldValue = elementData(index); // index索引的元素
         elementData[index] = element;
         return oldValue;
     }
@@ -450,6 +467,9 @@ public class ArrayList<E> extends AbstractList<E>
      * which helps when add(E) is called in a C1-compiled loop.
      */
     private void add(E e, Object[] elementData, int s) {
+        /*
+        如果列表大小等于此列表容量进行扩容
+         */
         if (s == elementData.length)
             elementData = grow();
         elementData[s] = e;
@@ -457,7 +477,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /**
-     * Appends the specified element to the end of this list.
+     * 将指定元素附加到此列表的末尾。
      *
      * @param e element to be appended to this list
      * @return {@code true} (as specified by {@link Collection#add})

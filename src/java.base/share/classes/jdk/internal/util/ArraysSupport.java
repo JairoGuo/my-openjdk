@@ -635,6 +635,9 @@ public class ArraysSupport {
         // assert minGrowth > 0
 
         int prefLength = oldLength + Math.max(minGrowth, prefGrowth); // might overflow
+        /*
+        0 < prefLength < 2147483639(Integer.MAX_VALUE - 8)
+         */
         if (0 < prefLength && prefLength <= SOFT_MAX_ARRAY_LENGTH) {
             return prefLength;
         } else {
