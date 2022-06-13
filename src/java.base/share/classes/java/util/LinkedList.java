@@ -860,7 +860,7 @@ public class LinkedList<E>
      * 返回此列表中元素的列表迭代器（以正确的顺序），从列表中的指定位置开始。
      * 遵守 {@code List.listIterator(int)} 的一般约定。
      *
-     * <p> list-iterator 是 <i>fail-fast<i>：如果在 Iterator 创建后的任何时间对列表进行结构修改，
+     * <p> list-iterator 是 <i>fail-fast</i>: 如果在 Iterator 创建后的任何时间对列表进行结构修改，
      * 在除了通过列表迭代器自己的 {@code remove} 或 {@code add} 方法之外的任何方式，列表迭代器都会抛出 {@code ConcurrentModificationException}。
      * 因此，面对并发修改，迭代器快速而干净地失败，而不是在未来不确定的时间冒任意的、非确定性的行为。
      *
