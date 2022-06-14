@@ -50,7 +50,7 @@ final class StringUTF16 {
             throw new OutOfMemoryError("UTF16 String size is " + len +
                                        ", should be less than " + MAX_LENGTH);
         }
-        return new byte[len << 1];
+        return new byte[len << 1]; // 翻倍
     }
 
     @IntrinsicCandidate

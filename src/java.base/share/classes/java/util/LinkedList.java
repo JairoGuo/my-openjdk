@@ -752,8 +752,7 @@ public class LinkedList<E>
      }
 
     /**
-     * Retrieves, but does not remove, the last element of this list,
-     * or returns {@code null} if this list is empty.
+     * 检索但不删除此列表的最后一个元素，如果此列表为空，则返回 {@code null}。
      *
      * @return the last element of this list, or {@code null}
      *         if this list is empty

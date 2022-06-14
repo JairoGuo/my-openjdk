@@ -156,8 +156,8 @@ public final class String
     private final byte[] value;
 
     /**
-     * The identifier of the encoding used to encode the bytes in
-     * {@code value}. The supported values in this implementation are
+     * 用于对 {@code value} 中的字节进行编码的编码标识符。
+     * 此实现中支持的值是
      *
      * LATIN1
      * UTF16
@@ -182,32 +182,28 @@ public final class String
     private static final long serialVersionUID = -6849794470754667710L;
 
     /**
-     * If String compaction is disabled, the bytes in {@code value} are
-     * always encoded in UTF16.
+     * 字符串压缩
+     * <p>如果禁用字符串压缩，则 {@code value} 中的字节始终以 UTF16 编码。
      *
-     * For methods with several possible implementation paths, when String
-     * compaction is disabled, only one code path is taken.
+     * 对于具有多个可能实现路径的方法，当禁用字符串压缩时，仅采用一个代码路径。
      *
-     * The instance field value is generally opaque to optimizing JIT
-     * compilers. Therefore, in performance-sensitive place, an explicit
-     * check of the static boolean {@code COMPACT_STRINGS} is done first
-     * before checking the {@code coder} field since the static boolean
-     * {@code COMPACT_STRINGS} would be constant folded away by an
-     * optimizing JIT compiler. The idioms for these cases are as follows.
+     * 实例字段值通常对优化 JIT 编译器是不透明的。
+     * 因此，在性能敏感的地方，在检查 {@code coder} 字段之前首先对静态布尔 {@code COMPACT_STRINGS} 进行显式检查，因为静态布尔 {@code COMPACT_STRINGS} 将被优化 JIT 常量折叠掉编译器。
+     * 这些情况的成语如下。
      *
-     * For code such as:
+     * 对于如下代码:
      *
      *    if (coder == LATIN1) { ... }
      *
-     * can be written more optimally as
+     * 可以更优化地写为
      *
      *    if (coder() == LATIN1) { ... }
      *
-     * or:
+     * 或:
      *
      *    if (COMPACT_STRINGS && coder == LATIN1) { ... }
      *
-     * An optimizing JIT compiler can fold the above conditional as:
+     * 优化的 JIT 编译器可以将上述条件折叠为:
      *
      *    COMPACT_STRINGS == true  => if (coder == LATIN1) { ... }
      *    COMPACT_STRINGS == false => if (false)           { ... }
@@ -4458,8 +4454,7 @@ public final class String
     }
 
     /**
-     * Copy character bytes from this string into dst starting at dstBegin.
-     * This method doesn't perform any range checking.
+     * 从 dstBegin 开始将此字符串中的字符字节复制到 dst。此方法不执行任何范围检查。
      *
      * Invoker guarantees: dst is in UTF16 (inflate itself for asb), if two
      * coders are different, and dst is big enough (range check)

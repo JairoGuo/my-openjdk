@@ -57,17 +57,17 @@ import static java.lang.String.checkOffset;
  */
 abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /**
-     * The value is used for character storage.
+     * 该值用于字符存储。
      */
     byte[] value;
 
     /**
-     * The id of the encoding used to encode the bytes in {@code value}.
+     * 用于对 {@code value} 中的字节进行编码的编码的 id。
      */
     byte coder;
 
     /**
-     * The count is the number of characters used.
+     * count是使用的字符数。
      */
     int count;
 
@@ -81,7 +81,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Creates an AbstractStringBuilder of the specified capacity.
+     * 创建指定容量
      */
     AbstractStringBuilder(int capacity) {
         if (COMPACT_STRINGS) {
@@ -94,10 +94,8 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Constructs an AbstractStringBuilder that contains the same characters
-     * as the specified {@code String}. The initial capacity of
-     * the string builder is {@code 16} plus the length of the
-     * {@code String} argument.
+     * 构造一个包含与指定 {@code String} 相同的字符的 AbstractStringBuilder。
+     * 字符串生成器的初始容量是 {@code 16} 加上 {@code String} 参数的长度。
      *
      * @param      str   the string to copy.
      */
@@ -193,20 +191,15 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Ensures that the capacity is at least equal to the specified minimum.
-     * If the current capacity is less than the argument, then a new internal
-     * array is allocated with greater capacity. The new capacity is the
-     * larger of:
+     * 确保容量至少等于指定的最小值(minimumCapacity)。如果当前容量小于参数，则分配具有更大容量的新内部数组。新容量是以下两者中的较大者：
      * <ul>
-     * <li>The {@code minimumCapacity} argument.
-     * <li>Twice the old capacity, plus {@code 2}.
+     * <li>{@code minimumCapacity} 参数。
+     * <li>旧容量的两倍 + 2。(Twice the old capacity, plus {@code 2}.)
      * </ul>
-     * If the {@code minimumCapacity} argument is nonpositive, this
-     * method takes no action and simply returns.
-     * Note that subsequent operations on this object can reduce the
-     * actual capacity below that requested here.
+     * 如果 {@code minimumCapacity} 参数为非正数，则此方法不执行任何操作并简单地返回。
+     * 请注意，对该对象的后续操作可能会将实际容量减少到此处请求的容量以下。
      *
-     * @param   minimumCapacity   the minimum desired capacity.
+     * @param   minimumCapacity   所需的最小容量
      */
     public void ensureCapacity(int minimumCapacity) {
         if (minimumCapacity > 0) {
@@ -215,16 +208,25 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * For positive values of {@code minimumCapacity}, this method
-     * behaves like {@code ensureCapacity}, however it is never
-     * synchronized.
-     * If {@code minimumCapacity} is non positive due to numeric
-     * overflow, this method throws {@code OutOfMemoryError}.
+     * 对于 {@code minimumCapacity} 的正值，此方法的行为类似于 {@code ensureCapacity}，但它从不同步。
+     * 如果 {@code minimumCapacity} 由于数值溢出而不是正数，则此方法抛出 {@code OutOfMemoryError}。
      */
     private void ensureCapacityInternal(int minimumCapacity) {
         // overflow-conscious code
+        /*
+        根据 COMPACT_STRINGS 标识字符串是否压缩，进行溢出标记
+        开启压缩 coder 为0
+
+        关闭压缩容量为字节数组长度的一般，不压缩使用UTF16存储，一个字符占用两个字节
+         */
         int oldCapacity = value.length >> coder;
+        /*
+        仅minimumCapacity大于oldCapacity长度可用,
+         */
         if (minimumCapacity - oldCapacity > 0) {
+            /*
+            newCapacity(minimumCapacity) << coder 如果不压缩 coder= 1 将扩容的容量扩大二倍来存储UTF16
+             */
             value = Arrays.copyOf(value,
                     newCapacity(minimumCapacity) << coder);
         }
@@ -252,8 +254,13 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     private int newCapacity(int minCapacity) {
         int oldLength = value.length;
-        int newLength = minCapacity << coder;
+        int newLength = minCapacity << coder; // 如果不开启字符串压缩 coder = 1，容量应扩大两倍
         int growth = newLength - oldLength;
+        /*
+        length = oldLength + Math.max(growth, oldLength + (2 << coder));
+        有参构造StringBuilder(int capacity) 构造对象时可以传入0，如果扩容加2则无法进行扩容
+        如果不压缩加2操作也应为加4
+         */
         int length = ArraysSupport.newLength(oldLength, growth, oldLength + (2 << coder));
         if (length == Integer.MAX_VALUE) {
             throw new OutOfMemoryError("Required length exceeds implementation limit");
@@ -264,6 +271,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /**
      * If the coder is "isLatin1", this inflates the internal 8-bit storage
      * to 16-bit <hi=0, low> pair storage.
+     * <p> 如果编码器是“isLatin1”，这会将内部 8 位存储膨胀为 16 位 <hi=0, low> 对存储。
      */
     private void inflate() {
         if (!isLatin1()) {
@@ -557,7 +565,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Appends the specified string to this character sequence.
+     * 将指定的字符串附加到此字符序列。
      * <p>
      * The characters of the {@code String} argument are appended, in
      * order, increasing the length of this sequence by the length of the
@@ -631,6 +639,9 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
         ensureCapacityInternal(count + 4);
         int count = this.count;
         byte[] val = this.value;
+        /*
+        根据是否压缩添加null字符串
+         */
         if (isLatin1()) {
             val[count++] = 'n';
             val[count++] = 'u';
@@ -1714,6 +1725,9 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     private void putStringAt(int index, String str, int off, int end) {
+        /*
+        如果StringBuilder对象字符串压缩标识与插入字符串压缩标识不一致进行膨胀
+         */
         if (getCoder() != str.coder()) {
             inflate();
         }
