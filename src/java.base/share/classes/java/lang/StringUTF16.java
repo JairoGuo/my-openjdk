@@ -1461,7 +1461,7 @@ final class StringUTF16 {
         // We need a range check here because 'putChar' has no checks
         checkBoundsOffCount(dstOff, len, dst);
         for (int i = 0; i < len; i++) {
-            putChar(dst, dstOff++, src[srcOff++] & 0xff);
+            putChar(dst, dstOff++, src[srcOff++] & 0xff); // & 0xff 补气到16位
         }
     }
 

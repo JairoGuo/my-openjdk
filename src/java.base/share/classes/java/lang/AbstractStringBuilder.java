@@ -587,7 +587,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
             return appendNull();
         }
         int len = str.length();
-        ensureCapacityInternal(count + len);
+        ensureCapacityInternal(count + len); // 扩容
         putStringAt(count, str);
         count += len;
         return this;
@@ -935,8 +935,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Appends the string representation of the {@code codePoint}
-     * argument to this sequence.
+     * 将 {@code codePoint} 参数的字符串表示形式附加到此序列。
      *
      * <p> The argument is appended to the contents of this sequence.
      * The length of this sequence increases by
@@ -961,8 +960,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
     }
 
     /**
-     * Removes the {@code char} at the specified position in this
-     * sequence. This sequence is shortened by one {@code char}.
+     * 删除此序列中指定位置的 {@code char}。此序列缩短一个 {@code char}。
      *
      * <p>Note: If the character at the given index is a supplementary
      * character, this method does not remove the entire character. If
@@ -979,7 +977,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     public AbstractStringBuilder deleteCharAt(int index) {
         checkIndex(index, count);
-        shift(index + 1, -1);
+        shift(index + 1, -1); // 将index索引开始的位置 向前覆盖一个长度
         count--;
         return this;
     }

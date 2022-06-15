@@ -96,12 +96,11 @@ public class HashSet<E>
 
     private transient HashMap<E,Object> map;
 
-    // Dummy value to associate with an Object in the backing Map
+    // 与支持 Map 中的对象关联的虚拟值
     private static final Object PRESENT = new Object();
 
     /**
-     * Constructs a new, empty set; the backing {@code HashMap} instance has
-     * default initial capacity (16) and load factor (0.75).
+     * 构造一个新的HashMap存储HashSet；支持的HashMap实例具有默认的初始容量 (16) 和加载因子 (0.75)。
      */
     public HashSet() {
         map = new HashMap<>();
@@ -218,6 +217,9 @@ public class HashSet<E>
      * element
      */
     public boolean add(E e) {
+        /*
+        map 的value 报错一个 Object对象
+         */
         return map.put(e, PRESENT)==null;
     }
 
