@@ -62,7 +62,9 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     private static final Unsafe U = Unsafe.getUnsafe();
     private static final long VALUE
         = U.objectFieldOffset(AtomicInteger.class, "value");
-
+    /**
+     * volatile保证value值的有序性和线程可见性, 它无法保证原子性
+     */
     private volatile int value;
 
     /**
@@ -101,8 +103,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Sets the value to {@code newValue},
-     * with memory effects as specified by {@link VarHandle#setRelease}.
+     * 将值设置为 {@code newValue}，具有由 {@link VarHandle#setRelease} 指定的记忆效果。
      *
      * @param newValue the new value
      * @since 1.6
@@ -112,8 +113,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Atomically sets the value to {@code newValue} and returns the old value,
-     * with memory effects as specified by {@link VarHandle#getAndSet}.
+     * 以原子方式将值设置为 {@code newValue} 并返回旧值，具有由 {@link VarHandle#getAndSet} 指定的记忆效果。
      *
      * @param newValue the new value
      * @return the previous value

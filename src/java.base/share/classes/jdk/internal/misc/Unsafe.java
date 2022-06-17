@@ -1067,8 +1067,7 @@ public final class Unsafe {
     }
 
     /**
-     * Reports the location of the field with a given name in the storage
-     * allocation of its class.
+     * 报告具有给定名称的字段在其类的存储分配中的位置(offset)
      *
      * @throws NullPointerException if any parameter is {@code null}.
      * @throws InternalError if there is no field named {@code name} declared
@@ -1455,8 +1454,7 @@ public final class Unsafe {
     }
 
     /**
-     * Atomically updates Java variable to {@code x} if it is currently
-     * holding {@code expected}.
+     * 如果在内存offset的对象o存在并且与 {@code expected} 相同，则自动将 Java 变量更新为 {@code x}。
      *
      * <p>This operation has memory semantics of a {@code volatile} read
      * and write.  Corresponds to C11 atomic_compare_exchange_strong.
@@ -2661,9 +2659,7 @@ public final class Unsafe {
     }
 
     /**
-     * Atomically exchanges the given value with the current value of
-     * a field or array element within the given object {@code o}
-     * at the given {@code offset}.
+     * 在给定的 {@code offset} 处以原子方式将给定值与给定对象 {@code o} 中的字段或数组元素的当前值交换。
      *
      * @param o object/array to update the field/element in
      * @param offset field/element offset
@@ -2675,7 +2671,10 @@ public final class Unsafe {
     public final int getAndSetInt(Object o, long offset, int newValue) {
         int v;
         do {
-            v = getIntVolatile(o, offset);
+            v = getIntVolatile(o, offset); // 获取对象o在内存offset处的值
+            /*
+            自旋，对象o在内存offset处的值与v是否相同，相同更新为newValue，否则继续等待
+             */
         } while (!weakCompareAndSetInt(o, offset, v, newValue));
         return v;
     }
