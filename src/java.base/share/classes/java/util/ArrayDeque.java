@@ -103,24 +103,19 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      */
 
     /**
-     * The array in which the elements of the deque are stored.
-     * All array cells not holding deque elements are always null.
-     * The array always has at least one null slot (at tail).
+     * 存储（循环）双端队列元素的数组。所有不包含双端队列元素的数组单元始终为空。数组总是至少有一个空槽（在尾部）。
      */
     transient Object[] elements;
 
     /**
-     * The index of the element at the head of the deque (which is the
-     * element that would be removed by remove() or pop()); or an
-     * arbitrary number 0 <= head < elements.length equal to tail if
-     * the deque is empty.
+     * 双端队列头部元素的索引（将被 remove() 或 pop() 删除的元素）;
+     * 如果deque是空，head（0 <= head < elements.length） == tail
      */
     transient int head;
 
     /**
-     * The index at which the next element would be added to the tail
-     * of the deque (via addLast(E), add(E), or push(E));
-     * elements[tail] is always null.
+     * 将下一个元素添加到双端队列尾部的索引（通过 addLast(E)、add(E) 或 push(E)）;
+     * elements[tail] 始终为空.
      */
     transient int tail;
 
@@ -142,12 +137,31 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         final int oldCapacity = elements.length;
         int newCapacity;
         // Double capacity if small; else grow by 50%
+        /*
+        如果扩容前容量小于64每次容量+2，否则扩容50%，避免过度扩容
+         */
         int jump = (oldCapacity < 64) ? (oldCapacity + 2) : (oldCapacity >> 1);
+        /*
+        如果被扩容容量超出范围
+         */
         if (jump < needed
             || (newCapacity = (oldCapacity + jump)) - MAX_ARRAY_SIZE > 0)
-            newCapacity = newCapacity(needed, jump);
+            newCapacity = newCapacity(needed, jump); // 针对边界值做处理
         final Object[] es = elements = Arrays.copyOf(elements, newCapacity);
         // Exceptionally, here tail == head needs to be disambiguated
+        /*
+        因为是添加后扩容, 所以需要判断 tail == head 的歧义(可能是满,违反了 tail 一定是 null 的规则)
+        当循环头尾执行相交，将head开始到扩容前容器最后索引的元素移动到扩容后的新位置上
+        + 有值的位置
+        - null的位置
+        # 扩容后的位置
+        ｜ 扩容前的长度位置
+        ++++++tail-------head++++++|######
+        ++++++tail-------------head++++++|
+        或
+        ++++++++++++head&tail++++++|------
+        ++++++++++++tail------head++++++|
+         */
         if (tail < head || (tail == head && es[head] != null)) {
             // wrap around; slide first leg forward to end of array
             int newSpace = newCapacity - oldCapacity;
@@ -162,6 +176,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     /** Capacity calculation for edge conditions, especially overflow. */
     private int newCapacity(int needed, int jump) {
         final int oldCapacity = elements.length, minCapacity;
+        /*
+        扩容后的容量超出范围
+         */
         if ((minCapacity = oldCapacity + needed) - MAX_ARRAY_SIZE > 0) {
             if (minCapacity < 0)
                 throw new IllegalStateException("Sorry, deque too big");
@@ -175,8 +192,8 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Constructs an empty array deque with an initial capacity
-     * sufficient to hold 16 elements.
+     * 构造一个空数组双端队列，其初始容量足以容纳 16 个元素。
+     * 实际数组长度 + 1，用于存放tail
      */
     public ArrayDeque() {
         elements = new Object[16 + 1];
@@ -224,6 +241,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * Precondition and postcondition: 0 <= i < modulus.
      */
     static final int dec(int i, int modulus) {
+        /*
+        i为负数使其数组最后的位置
+         */
         if (--i < 0) i = modulus - 1;
         return i;
     }

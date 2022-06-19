@@ -71,8 +71,7 @@ public final class Optional<T> {
     private final T value;
 
     /**
-     * Returns an empty {@code Optional} instance.  No value is present for this
-     * {@code Optional}.
+     * 返回一个空的 {@code Optional} 实例。此 {@code Optional} 没有值。
      *
      * @apiNote
      * Though it may be tempting to do so, avoid testing if an object is empty
@@ -101,8 +100,7 @@ public final class Optional<T> {
     }
 
     /**
-     * Returns an {@code Optional} describing the given non-{@code null}
-     * value.
+     * 返回描述给定非 {@code null} 值的 {@code Optional}。
      *
      * @param value the value to describe, which must be non-{@code null}
      * @param <T> the type of the value
@@ -110,12 +108,15 @@ public final class Optional<T> {
      * @throws NullPointerException if value is {@code null}
      */
     public static <T> Optional<T> of(T value) {
+        /*
+        检查指定的对象引用是否为null，为null抛出NullPointerException异常
+        否者返回这个对象用来构造Optional实例
+         */
         return new Optional<>(Objects.requireNonNull(value));
     }
 
     /**
-     * Returns an {@code Optional} describing the given value, if
-     * non-{@code null}, otherwise returns an empty {@code Optional}.
+     * 返回一个描述给定值的 {@code Optional}，如果不是 {@code null}，否则返回一个空的 {@code Optional}。
      *
      * @param value the possibly-{@code null} value to describe
      * @param <T> the type of the value
@@ -129,8 +130,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns the value, otherwise throws
-     * {@code NoSuchElementException}.
+     * 如果存在值，则返回该值，否则抛{@code NoSuchElementException}.
      *
      * @apiNote
      * The preferred alternative to this method is {@link #orElseThrow()}.
@@ -166,8 +166,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, performs the given action with the value,
-     * otherwise does nothing.
+     * 如果存在值，则使用该值执行给定的操作，否则不执行任何操作。
      *
      * @param action the action to be performed, if a value is present
      * @throws NullPointerException if value is present and the given action is
@@ -203,6 +202,8 @@ public final class Optional<T> {
      * If a value is present, and the value matches the given predicate,
      * returns an {@code Optional} describing the value, otherwise returns an
      * empty {@code Optional}.
+     * 如果存在一个值，并且该值与给定的谓词（Predicate）匹配，则返回一个描述该值的 {@code Optional}，
+     * 否则返回一个空的 {@code Optional}。
      *
      * @param predicate the predicate to apply to a value, if present
      * @return an {@code Optional} describing the value of this
@@ -212,8 +213,14 @@ public final class Optional<T> {
      */
     public Optional<T> filter(Predicate<? super T> predicate) {
         Objects.requireNonNull(predicate);
+        /*
+        不存在返回由null构造的Optional对象
+         */
         if (!isPresent()) {
             return this;
+        /*
+        使用predicate进行匹配返回Optional对象或空Optional对象
+         */
         } else {
             return predicate.test(value) ? this : empty();
         }
@@ -257,6 +264,9 @@ public final class Optional<T> {
         if (!isPresent()) {
             return empty();
         } else {
+            /*
+            不为空使用mapper进行处理（映射）
+             */
             return Optional.ofNullable(mapper.apply(value));
         }
     }
@@ -285,6 +295,9 @@ public final class Optional<T> {
         if (!isPresent()) {
             return empty();
         } else {
+            /*
+            通过mapper处理后，如果不为null直接返回Optional对象，而不是类似map使用Optional返回新的对象
+             */
             @SuppressWarnings("unchecked")
             Optional<U> r = (Optional<U>) mapper.apply(value);
             return Objects.requireNonNull(r);
@@ -309,6 +322,9 @@ public final class Optional<T> {
         if (isPresent()) {
             return this;
         } else {
+            /*
+            返回由提供supplier函数产生的Optional对象
+             */
             @SuppressWarnings("unchecked")
             Optional<T> r = (Optional<T>) supplier.get();
             return Objects.requireNonNull(r);
@@ -339,8 +355,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns the value, otherwise returns
-     * {@code other}.
+     * 如果存在值，则返回该值，否则返回 {@code other}。
      *
      * @param other the value to be returned, if no value is present.
      *        May be {@code null}.
@@ -351,8 +366,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns the value, otherwise returns the result
-     * produced by the supplying function.
+     * 如果存在值，则返回该值，否则返回提供函数产生的结果。
      *
      * @param supplier the supplying function that produces a value to be returned
      * @return the value, if present, otherwise the result produced by the
@@ -365,8 +379,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns the value, otherwise throws
-     * {@code NoSuchElementException}.
+     * 如果存在值，则返回该值，否则抛出 {@code NoSuchElementException}。
      *
      * @return the non-{@code null} value described by this {@code Optional}
      * @throws NoSuchElementException if no value is present
@@ -380,8 +393,7 @@ public final class Optional<T> {
     }
 
     /**
-     * If a value is present, returns the value, otherwise throws an exception
-     * produced by the exception supplying function.
+     * 如果存在值，则返回该值，否则抛出由提供异常的函数产生的异常。
      *
      * @apiNote
      * A method reference to the exception constructor with an empty argument
@@ -405,7 +417,7 @@ public final class Optional<T> {
     }
 
     /**
-     * Indicates whether some other object is "equal to" this {@code Optional}.
+     * 指示其他对象是否等于此 {@code Optional}。
      * The other object is considered equal if:
      * <ul>
      * <li>it is also an {@code Optional} and;
