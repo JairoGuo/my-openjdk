@@ -444,8 +444,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     /**
-     * Removes the first occurrence of the specified element in this
-     * deque (when traversing the deque from head to tail).
+     * 删除此双端队列中第一次出现的指定元素（从头到尾遍历双端队列时）。
      * If the deque does not contain the element, it is unchanged.
      * More formally, removes the first element {@code e} such that
      * {@code o.equals(e)} (if such an element exists).
@@ -458,6 +457,13 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     public boolean removeFirstOccurrence(Object o) {
         if (o != null) {
             final Object[] es = elements;
+            /*
+            如果head < taill，保持顺序从head到tail遍历，
+            如果head < tail不成立，先遍历head到数组结尾，然后在从数组索引0到tail遍历
+            结束条件to = end 使 to == end 成立
+            head++++++++++++tail-------
+            ++++++tail-------head++++++
+             */
             for (int i = head, end = tail, to = (i <= end) ? end : es.length;
                  ; i = 0, to = end) {
                 for (; i < to; i++)
@@ -465,6 +471,11 @@ public class ArrayDeque<E> extends AbstractCollection<E>
                         delete(i);
                         return true;
                     }
+                /*
+                未找到结束遍历
+                如果head < taill， 初始化使 to = end
+                如果head < taill 不成立， 第二次循环时， i = 0， to = end。
+                 */
                 if (to == end) break;
             }
         }
@@ -627,15 +638,18 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         final Object[] es = elements;
         final int capacity = es.length;
         final int h, t;
-        // number of elements before to-be-deleted elt
+        // 将被删除的索引i前的元素数
         final int front = sub(i, h = head, capacity);
-        // number of elements after to-be-deleted elt
+        // 将被删除的索引i后的元素数
         final int back = sub(t = tail, i, capacity) - 1;
+        /*
+        使其移动最少的元素来完成删除目的
+         */
         if (front < back) {
             // move front elements forwards
-            if (h <= i) {
-                System.arraycopy(es, h, es, h + 1, front);
-            } else { // Wrap around
+            if (h <= i) { // head++++++++++++tail-------
+                    System.arraycopy(es, h, es, h + 1, front);
+            } else { // Wrap around  ++++++tail-------head++++++
                 System.arraycopy(es, 0, es, 1, i);
                 es[0] = es[capacity - 1];
                 System.arraycopy(es, h, es, h + 1, front - (i + 1));
@@ -646,9 +660,9 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         } else {
             // move back elements backwards
             tail = dec(t, capacity);
-            if (i <= tail) {
+            if (i <= tail) { // head++++++++++++tail-------
                 System.arraycopy(es, i + 1, es, i, back);
-            } else { // Wrap around
+            } else { // Wrap around  ++++++tail-------head++++++
                 System.arraycopy(es, i + 1, es, i, capacity - (i + 1));
                 es[capacity - 1] = es[0];
                 System.arraycopy(es, 1, es, 0, t - 1);
