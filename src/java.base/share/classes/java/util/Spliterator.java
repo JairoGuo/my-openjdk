@@ -295,11 +295,8 @@ import java.util.function.LongConsumer;
  */
 public interface Spliterator<T> {
     /**
-     * If a remaining element exists, performs the given action on it,
-     * returning {@code true}; else returns {@code false}.  If this
-     * Spliterator is {@link #ORDERED} the action is performed on the
-     * next element in encounter order.  Exceptions thrown by the
-     * action are relayed to the caller.
+     * 如果存在剩余元素，则对其执行给定的操作，返回 {@code true};否则返回 {@code false}。
+     * 如果此 Spliterator 是 {@link ORDERED}，则按遇到顺序对下一个元素执行操作。操作引发的异常将转发给调用者。
      * <p>
      * Subsequent behavior of a spliterator is unspecified if the action throws
      * an exception.
@@ -312,9 +309,8 @@ public interface Spliterator<T> {
     boolean tryAdvance(Consumer<? super T> action);
 
     /**
-     * Performs the given action for each remaining element, sequentially in
-     * the current thread, until all elements have been processed or the action
-     * throws an exception.  If this Spliterator is {@link #ORDERED}, actions
+     * 在当前线程中按顺序对每个剩余元素执行给定的操作，直到处理完所有元素或该操作引发异常。
+     * If this Spliterator is {@link #ORDERED}, actions
      * are performed in encounter order.  Exceptions thrown by the action
      * are relayed to the caller.
      * <p>
@@ -333,9 +329,7 @@ public interface Spliterator<T> {
     }
 
     /**
-     * If this spliterator can be partitioned, returns a Spliterator
-     * covering elements, that will, upon return from this method, not
-     * be covered by this Spliterator.
+     * 如果这个分割器可以被分割，则返回一个覆盖元素的分割器，从这个方法返回时，这个分割器将不被这个分割器覆盖。
      *
      * <p>If this Spliterator is {@link #ORDERED}, the returned Spliterator
      * must cover a strict prefix of the elements.

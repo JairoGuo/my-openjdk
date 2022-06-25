@@ -147,22 +147,25 @@ public class Thread implements Runnable {
     }
 
     private volatile String name;
+    /*
+    线程优先级
+     */
     private int priority;
 
-    /* Whether or not the thread is a daemon thread. */
+    /* 是否为守护线程 */
     private boolean daemon = false;
 
-    /* Interrupt state of the thread - read/written directly by JVM */
+    /* 线程的中断状态 - read/written directly by JVM */
     private volatile boolean interrupted;
 
     /* Fields reserved for exclusive use by the JVM */
     private boolean stillborn = false;
     private long eetop;
 
-    /* What will be run. */
+    /* 最终执行线程任务 */
     private Runnable target;
 
-    /* The group of this thread */
+    /* 线程组 */
     private ThreadGroup group;
 
     /* The context ClassLoader for this thread */
@@ -200,7 +203,7 @@ public class Thread implements Runnable {
      */
     private final long tid;
 
-    /* For generating thread ID */
+    /* 用于生成线程 ID */
     private static long threadSeqNumber;
 
     private static synchronized long nextThreadID() {
@@ -399,19 +402,25 @@ public class Thread implements Runnable {
 
         this.name = name;
 
-        Thread parent = currentThread();
-        SecurityManager security = System.getSecurityManager();
+        Thread parent = currentThread(); // 获取当前正在执行的线程为父线程
+        SecurityManager security = System.getSecurityManager(); // 系统安全管理器
         if (g == null) {
             /* Determine if it's an applet or not */
 
             /* If there is a security manager, ask the security manager
                what to do. */
+            /*
+            如果使用系统安全管理器，通过安全管理器获取线程组 Thread.currentThread().getThreadGroup();
+             */
             if (security != null) {
                 g = security.getThreadGroup();
             }
 
             /* If the security manager doesn't have a strong opinion
                on the matter, use the parent thread group. */
+            /*
+            如果获取的线程组还是为空则使用父线程组
+             */
             if (g == null) {
                 g = parent.getThreadGroup();
             }
@@ -419,10 +428,11 @@ public class Thread implements Runnable {
 
         /* checkAccess regardless of whether or not threadgroup is
            explicitly passed in. */
-        g.checkAccess();
+        g.checkAccess(); // 确定当前运行的线程是否有权修改此线程组。
 
         /*
          * Do we have the required permissions?
+         * 检查是否有权限
          */
         if (security != null) {
             if (isCCLOverridden(getClass())) {
@@ -431,7 +441,7 @@ public class Thread implements Runnable {
             }
         }
 
-        g.addUnstarted();
+        g.addUnstarted(); // 线程组中标记未启动的线程数+1，这里方法是同步的，防止出现线程安全问题
 
         this.group = g;
         this.daemon = parent.isDaemon();
@@ -451,7 +461,7 @@ public class Thread implements Runnable {
         this.stackSize = stackSize;
 
         /* Set thread ID */
-        this.tid = nextThreadID();
+        this.tid = nextThreadID(); // 初始化当前线程对象的线程ID，该方法是同步的，++threadSeqNumber;
     }
 
     /**
@@ -788,21 +798,29 @@ public class Thread implements Runnable {
          * to this method in the future may have to also be added to the VM.
          *
          * A zero status value corresponds to state "NEW".
+         *
+         * threadStatus == 0 为新建状态（NEW）
          */
         if (threadStatus != 0)
             throw new IllegalThreadStateException();
 
         /* Notify the group that this thread is about to be started
          * so that it can be added to the group's list of threads
-         * and the group's unstarted count can be decremented. */
+         * and the group's unstarted count can be decremented.
+         * 通知线程组，当前线程即将启动，线程组当前启动线程数+1，未启动线程数-1
+         * */
         group.add(this);
 
-        boolean started = false;
+        boolean started = false; // 启动状态，线程启动为true
         try {
             start0();
             started = true;
         } finally {
             try {
+                /*
+                如果启动呢失败
+                线程组内部移除当前启动的线程数量-1，同时启动失败的线程数量+1 nUnstartedThreads++
+                 */
                 if (!started) {
                     group.threadStartFailed(this);
                 }
@@ -945,6 +963,12 @@ public class Thread implements Runnable {
     /**
      * Interrupts this thread.
      *
+     * 线程中断方法不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出啦～
+     * 只能由自身调用，否则可能会抛出 SecurityException
+     * 调用中断方法是由目标线程自己决定是否中断，而如果同时调用了wait,join,sleep等方法，会使当前线程进入阻塞状态，此时有可能发生InterruptedException异常
+     * 被阻塞的线程再调用中断方法是不合理的
+     * 中断不活动的线程不会产生任何影响
+     *
      * <p> Unless the current thread is interrupting itself, which is
      * always permitted, the {@link #checkAccess() checkAccess} method
      * of this thread is invoked, which may cause a {@link
@@ -985,12 +1009,18 @@ public class Thread implements Runnable {
      * @revised 6.0, 14
      */
     public void interrupt() {
+        /*
+        检查是否是自身调用
+         */
         if (this != Thread.currentThread()) {
             checkAccess();
 
             // thread may be blocked in an I/O operation
             synchronized (blockerLock) {
                 Interruptible b = blocker;
+                /*
+                检查是否是阻塞线程调用, 如果被阻塞将此阻塞线程也中断
+                 */
                 if (b != null) {
                     interrupted = true;
                     interrupt0();  // inform VM of interrupt
@@ -1012,6 +1042,9 @@ public class Thread implements Runnable {
      * interrupted again, after the first call had cleared its interrupted
      * status and before the second call had examined it).
      *
+     * 测试当前线程是否被中断。该方法清除线程的中断状态。
+     * 换句话说，如果这个方法被连续调用两次，第二次调用将返回 false（除非当前线程再次被中断，在第一次调用清除其中断状态之后，第二次调用检查它之前）
+     *
      * @return  {@code true} if the current thread has been interrupted;
      *          {@code false} otherwise.
      * @see #isInterrupted()
@@ -1023,6 +1056,9 @@ public class Thread implements Runnable {
         // We may have been interrupted the moment after we read the field,
         // so only clear the field if we saw that it was set and will return
         // true; otherwise we could lose an interrupt.
+        /*
+        我们可能在读取字段的那一刻就被打断了，所以只有当我们看到它被设置并返回 true 时才清除字段；否则我们可能会失去中断。
+         */
         if (interrupted) {
             t.interrupted = false;
             clearInterruptEvent();
@@ -1790,31 +1826,25 @@ public class Thread implements Runnable {
      */
     public enum State {
         /**
-         * Thread state for a thread which has not yet started.
+         * 尚未启动的线程的线程状态。
          */
         NEW,
 
         /**
-         * Thread state for a runnable thread.  A thread in the runnable
-         * state is executing in the Java virtual machine but it may
-         * be waiting for other resources from the operating system
-         * such as processor.
+         * 可运行线程的线程状态。
+         * 处于可运行状态的线程正在 Java 虚拟机中执行，但它可能正在等待来自操作系统的其他资源，例如处理器
          */
         RUNNABLE,
 
         /**
-         * Thread state for a thread blocked waiting for a monitor lock.
-         * A thread in the blocked state is waiting for a monitor lock
-         * to enter a synchronized block/method or
-         * reenter a synchronized block/method after calling
-         * {@link Object#wait() Object.wait}.
+         * 线程阻塞等待监视器锁(monitor)的线程状态。
+         * 处于阻塞状态的线程正在等待监视器锁进入synchronized代码块或方法或调用 {@link Object#wait() Object.wait} 后重新进入synchronized代码块或方法。
          */
         BLOCKED,
 
         /**
-         * Thread state for a waiting thread.
-         * A thread is in the waiting state due to calling one of the
-         * following methods:
+         * 等待线程的线程状态。
+         * 由于调用以下方法之一，线程处于等待状态：
          * <ul>
          *   <li>{@link Object#wait() Object.wait} with no timeout</li>
          *   <li>{@link #join() Thread.join} with no timeout</li>
@@ -1833,9 +1863,8 @@ public class Thread implements Runnable {
         WAITING,
 
         /**
-         * Thread state for a waiting thread with a specified waiting time.
-         * A thread is in the timed waiting state due to calling one of
-         * the following methods with a specified positive waiting time:
+         * 具有指定等待时间的等待线程的线程状态。
+         * 由于以指定的正等待时间调用以下方法之一，线程处于定时等待状态
          * <ul>
          *   <li>{@link #sleep Thread.sleep}</li>
          *   <li>{@link Object#wait(long) Object.wait} with timeout</li>
@@ -1847,8 +1876,7 @@ public class Thread implements Runnable {
         TIMED_WAITING,
 
         /**
-         * Thread state for a terminated thread.
-         * The thread has completed execution.
+         * 已终止线程的线程状态。线程已完成执行。
          */
         TERMINATED;
     }
