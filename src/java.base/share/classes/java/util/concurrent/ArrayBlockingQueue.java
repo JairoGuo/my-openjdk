@@ -99,17 +99,17 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      */
     private static final long serialVersionUID = -817911632652898426L;
 
-    /** The queued items */
+    /** 保存元素的数组 */
     @SuppressWarnings("serial") // Conditionally serializable
     final Object[] items;
 
-    /** items index for next take, poll, peek or remove */
+    /** 下次可执行take、poll、peek或remove操作的位置索引 */
     int takeIndex;
 
-    /** items index for next put, offer, or add */
+    /** 下次可执行put、offer或add操作的位置索引 */
     int putIndex;
 
-    /** Number of elements in the queue */
+    /** 队列已保存元素数量 */
     int count;
 
     /*
@@ -173,8 +173,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts element at current put position, advances, and signals.
-     * Call only when holding lock.
+     * 在指定索引插入元素，方法在调用前需要先获取锁
      */
     private void enqueue(E e) {
         // assert lock.isHeldByCurrentThread();
@@ -218,6 +217,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         // assert items[removeIndex] != null;
         // assert removeIndex >= 0 && removeIndex < items.length;
         final Object[] items = this.items;
+        /*
+        移除的元素是队列头元素，该元素置空，指针后移即可
+         */
         if (removeIndex == takeIndex) {
             // removing front item; just advance
             items[takeIndex] = null;
@@ -231,13 +233,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             // slide over all others up through putIndex.
             for (int i = removeIndex, putIndex = this.putIndex;;) {
                 int pred = i;
-                if (++i == items.length) i = 0;
+                if (++i == items.length) i = 0; // ++++++-------+
+                /*
+                ---++++++--
+                         ^
+                      putIndex
+                 */
                 if (i == putIndex) {
                     items[pred] = null;
                     this.putIndex = pred;
                     break;
                 }
-                items[pred] = items[i];
+                items[pred] = items[i]; // 后续元素需逐一向前移动一个位置
             }
             count--;
             if (itrs != null)
@@ -262,16 +269,14 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * capacity and the specified access policy.
      *
      * @param capacity the capacity of this queue
-     * @param fair if {@code true} then queue accesses for threads blocked
-     *        on insertion or removal, are processed in FIFO order;
-     *        if {@code false} the access order is unspecified.
+     * @param fair 如果 {@code true} 则在插入或删除时阻塞的线程的队列访问按 FIFO 顺序处理；如果 {@code false} 访问顺序未指定。
      * @throws IllegalArgumentException if {@code capacity < 1}
      */
     public ArrayBlockingQueue(int capacity, boolean fair) {
         if (capacity <= 0)
             throw new IllegalArgumentException();
         this.items = new Object[capacity];
-        lock = new ReentrantLock(fair);
+        lock = new ReentrantLock(fair); // true 公平锁
         notEmpty = lock.newCondition();
         notFull =  lock.newCondition();
     }
@@ -308,17 +313,15 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
                 throw new IllegalArgumentException();
             }
             count = i;
-            putIndex = (i == capacity) ? 0 : i;
+            putIndex = (i == capacity) ? 0 : i; // 队列容量和初始化的集合元素数量一样 下次添加操作从0开始
         } finally {
             lock.unlock();
         }
     }
 
     /**
-     * Inserts the specified element at the tail of this queue if it is
-     * possible to do so immediately without exceeding the queue's capacity,
-     * returning {@code true} upon success and throwing an
-     * {@code IllegalStateException} if this queue is full.
+     * 如果可以在不超过队列容量的情况下立即插入指定元素，则在此队列的尾部插入指定元素，成功时返回 {@code true}，
+     * 如果此队列已满则抛出 {@code IllegalStateException}。
      *
      * @param e the element to add
      * @return {@code true} (as specified by {@link Collection#add})
@@ -343,7 +346,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
-            if (count == items.length)
+            if (count == items.length) // 队列满不插入
                 return false;
             else {
                 enqueue(e);
@@ -366,6 +369,9 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock lock = this.lock;
         lock.lockInterruptibly();
         try {
+            /*
+            如果队列已满，进行阻塞等待
+             */
             while (count == items.length)
                 notFull.await();
             enqueue(e);
@@ -375,9 +381,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue, waiting
-     * up to the specified wait time for space to become available if
-     * the queue is full.
+     * 插入指定元素到队列的尾部，如果队列空间已满则阻塞等待，可自定义超时时间
      *
      * @throws InterruptedException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -388,12 +392,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         Objects.requireNonNull(e);
         long nanos = unit.toNanos(timeout);
         final ReentrantLock lock = this.lock;
-        lock.lockInterruptibly();
+        lock.lockInterruptibly(); // 除非当前线程被中断，否则获取锁。
         try {
             while (count == items.length) {
                 if (nanos <= 0L)
                     return false;
-                nanos = notFull.awaitNanos(nanos);
+                nanos = notFull.awaitNanos(nanos);  // 计算剩余超时时间
             }
             enqueue(e);
             return true;
@@ -532,7 +536,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns {@code true} if this queue contains the specified element.
+     * 如果此队列包含指定元素，则返回 {@code true}。
      * More formally, returns {@code true} if and only if this queue contains
      * at least one element {@code e} such that {@code o.equals(e)}.
      *
@@ -546,6 +550,18 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         try {
             if (count > 0) {
                 final Object[] items = this.items;
+                /*
+
+                先遍历唤醒数组的后段，元素没有命中，再遍历数组前段
+                takeIndex -> putIndex
+
+                takeIndex < putIndex，保持顺序从takeIndex到putIndex遍历，
+                如果head < tail不成立，先遍历takeIndex到数组结尾，然后在从数组索引0到putIndex遍历
+                结束条件to = end 使 to == end 成立
+                takeIndex++++++++++++putIndex-------
+                ++++++putIndex-------takeIndex++++++
+
+                 */
                 for (int i = takeIndex, end = putIndex,
                          to = (i < end) ? end : items.length;
                      ; i = 0, to = end) {
@@ -663,10 +679,16 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             int k;
             if ((k = count) > 0) {
                 circularClear(items, takeIndex, putIndex);
-                takeIndex = putIndex;
+                takeIndex = putIndex; // 重置takeIndex和putIndex
                 count = 0;
+                /*
+                清除迭代器
+                 */
                 if (itrs != null)
                     itrs.queueIsEmpty();
+                /*
+                通知所有等待的Waiters
+                 */
                 for (; k > 0 && lock.hasWaiters(notFull); k--)
                     notFull.signal();
             }
@@ -676,7 +698,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Nulls out slots starting at array index i, upto index end.
+     * 清除环形队列内所有元素
      * Condition i == end means "full" - the entire array is cleared.
      */
     private static void circularClear(Object[] items, int i, int end) {
