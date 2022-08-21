@@ -1289,13 +1289,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @throws NullPointerException if {@code workQueue}
      *         or {@code threadFactory} or {@code handler} is null
      */
-    public ThreadPoolExecutor(int corePoolSize,
-                              int maximumPoolSize,
-                              long keepAliveTime,
+    public ThreadPoolExecutor(int corePoolSize, // 核心线程数，线程池初始化后，线程池等待新任务到来时创建新线程
+                              int maximumPoolSize, // 最大线程数
+                              long keepAliveTime, // 如果线程数量多于corePoolSize，多余的空闲时间超过keepAliveTime会被终止
                               TimeUnit unit,
-                              BlockingQueue<Runnable> workQueue,
-                              ThreadFactory threadFactory,
-                              RejectedExecutionHandler handler) {
+                              BlockingQueue<Runnable> workQueue, // 工作队列 1.SynchronousQueue 直接交接 2. LinkedBlockingQueue 无界队列 3.ArrayBlockingQueue 有界队列
+                              ThreadFactory threadFactory, // 线程工厂 默认Executors.defaultThreadFactory()
+                              RejectedExecutionHandler handler) { // 拒绝策略
         if (corePoolSize < 0 ||
             maximumPoolSize <= 0 ||
             maximumPoolSize < corePoolSize ||
@@ -2018,6 +2018,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * directly in the calling thread of the {@code execute} method,
      * unless the executor has been shut down, in which case the task
      * is discarded.
+     * 当任务添加到线程池中被拒绝时，会在线程池当前正在运行的Thread线程池中处理被拒绝的任务。
      */
     public static class CallerRunsPolicy implements RejectedExecutionHandler {
         /**
@@ -2040,6 +2041,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
+     * 丢弃任务并抛出RejectedExecutionException异常
      * A handler for rejected tasks that throws a
      * {@link RejectedExecutionException}.
      *
@@ -2069,6 +2071,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * A handler for rejected tasks that silently discards the
      * rejected task.
+     *
+     * 当任务添加到线程池中被拒绝时，线程池将丢弃被拒绝的任务，但是不抛出异常。
      */
     public static class DiscardPolicy implements RejectedExecutionHandler {
         /**
@@ -2103,6 +2107,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      *     }
      *     e.execute(r);  // retry
      * }}}</pre>
+     *
+     * 当任务添加到线程池中被拒绝时，线程池会放弃等待队列中最旧的未处理任务，然后将被拒绝的任务添加到等待队列中。
      */
     public static class DiscardOldestPolicy implements RejectedExecutionHandler {
         /**

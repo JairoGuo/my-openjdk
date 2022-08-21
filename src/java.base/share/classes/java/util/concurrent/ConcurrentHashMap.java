@@ -588,8 +588,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     /*
      * Encodings for Node hash fields. See above for explanation.
      */
-    static final int MOVED     = -1; // hash for forwarding nodes
-    static final int TREEBIN   = -2; // hash for roots of trees
+    static final int MOVED     = -1; // 表示正在转移
+    static final int TREEBIN   = -2; // 表示已经转换成树
     static final int RESERVED  = -3; // hash for transient reservations
     static final int HASH_BITS = 0x7fffffff; // usable bits of normal node hash
 
@@ -772,13 +772,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     /* ---------------- Fields -------------- */
 
     /**
-     * The array of bins. Lazily initialized upon first insertion.
-     * Size is always a power of two. Accessed directly by iterators.
+     * 默认没初始化的数组。在第一次插入时延迟初始化。大小总是2的幂。由迭代器直接访问。
      */
     transient volatile Node<K,V>[] table;
 
     /**
-     * The next table to use; non-null only while resizing.
+     * 扩容时用到的，扩容后的数组
      */
     private transient volatile Node<K,V>[] nextTable;
 
@@ -796,6 +795,15 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * when table is null, holds the initial table size to use upon
      * creation, or 0 for default. After initialization, holds the
      * next element count value upon which to resize the table.
+     * 表初始化和调整大小控制。
+     * 用来控制表初始化和扩容的，默认值为0，当在初始化的时候指定了大小，这会将这个大小保存在sizeCtl中，大小为数组的0.75
+     * 如果为负数，则表正在初始化或调整大小：-1 表示初始化， -(1 + n) n 表示活动调整大小线程的数量。
+     * 当 table 为 null 时，保存要在创建时使用的初始表大小，或者默认为 0。
+     * 初始化后，保存下一个元素计数值，根据该值调整表的大小。
+     * -1，表示有线程正在进行初始化操作。
+     * -(1 + nThreads)，表示有n个线程正在一起扩容。
+     * 0，默认值，后续在真正初始化的时候使用默认容量。
+     * > 0，初始化或扩容完成后下一次的扩容门槛 。
      */
     private transient volatile int sizeCtl;
 
@@ -877,12 +885,11 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * table density ({@code loadFactor}), and number of concurrently
      * updating threads ({@code concurrencyLevel}).
      *
-     * @param initialCapacity the initial capacity. The implementation
+     * @param initialCapacity 初始容量。 The implementation
      * performs internal sizing to accommodate this many elements,
      * given the specified load factor.
-     * @param loadFactor the load factor (table density) for
-     * establishing the initial table size
-     * @param concurrencyLevel the estimated number of concurrently
+     * @param loadFactor 用于建立初始表大小的负载因子（表密度）
+     * @param concurrencyLevel 预计并发数
      * updating threads. The implementation may use this value as
      * a sizing hint.
      * @throws IllegalArgumentException if the initial capacity is
@@ -895,6 +902,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             throw new IllegalArgumentException();
         if (initialCapacity < concurrencyLevel)   // Use at least as many bins
             initialCapacity = concurrencyLevel;   // as estimated threads
+        // 计算最大容量。
         long size = (long)(1.0 + (long)initialCapacity / loadFactor);
         int cap = (size >= (long)MAXIMUM_CAPACITY) ?
             MAXIMUM_CAPACITY : tableSizeFor((int)size);
