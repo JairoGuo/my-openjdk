@@ -381,12 +381,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * we can only terminate if, after seeing that it is empty, we see
      * that workerCount is 0 (which sometimes entails a recheck -- see
      * below).
+     *
+     * 存放线程池的运行状态（runState）和线程池内有效线程的数量（workerCount），默认为RUNNING和0
      */
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
     private static final int COUNT_BITS = Integer.SIZE - 3;
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
 
     // runState is stored in the high-order bits
+    // runState存储在高位
     private static final int RUNNING    = -1 << COUNT_BITS;
     private static final int SHUTDOWN   =  0 << COUNT_BITS;
     private static final int STOP       =  1 << COUNT_BITS;
@@ -1326,41 +1329,55 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @throws NullPointerException if {@code command} is null
      */
     public void execute(Runnable command) {
+        // 任务为空
         if (command == null)
             throw new NullPointerException();
         /*
-         * Proceed in 3 steps:
+         * proceed in 3 steps:
          *
-         * 1. If fewer than corePoolSize threads are running, try to
+         * 1. if fewer than corepoolsize threads are running, try to
          * start a new thread with the given command as its first
-         * task.  The call to addWorker atomically checks runState and
-         * workerCount, and so prevents false alarms that would add
+         * task.  the call to addworker atomically checks runstate and
+         * workercount, and so prevents false alarms that would add
          * threads when it shouldn't, by returning false.
          *
-         * 2. If a task can be successfully queued, then we still need
+         * 2. if a task can be successfully queued, then we still need
          * to double-check whether we should have added a thread
          * (because existing ones died since last checking) or that
-         * the pool shut down since entry into this method. So we
+         * the pool shut down since entry into this method. so we
          * recheck state and if necessary roll back the enqueuing if
          * stopped, or start a new thread if there are none.
          *
-         * 3. If we cannot queue task, then we try to add a new
-         * thread.  If it fails, we know we are shut down or saturated
+         * 3. if we cannot queue task, then we try to add a new
+         * thread.  if it fails, we know we are shut down or saturated
          * and so reject the task.
          */
         int c = ctl.get();
+        /*
+         * 如果当前线程池中执行的任务数小于corePoolSize，通过addworker新疆一个线程，并标记为核心线程
+         */
         if (workerCountOf(c) < corePoolSize) {
             if (addWorker(command, true))
                 return;
             c = ctl.get();
         }
+        /*
+         * 如果当前执行的任务数大于等于核心线程数，通过isRunning判断线程状态，处于RUNNING并且能添加到任务队列中
+         */
         if (isRunning(c) && workQueue.offer(command)) {
             int recheck = ctl.get();
+            // 如果线程状态不是RUNNING需要从任务队列中移除任务，同时执行拒绝策略
             if (! isRunning(recheck) && remove(command))
                 reject(command);
+            /*
+             * 如果当前线程池为空，创建一个线程并执行
+             */
             else if (workerCountOf(recheck) == 0)
                 addWorker(null, false);
         }
+        /*
+         * 通过addWorker新建一个线程，并标记为maximumPoolSize，如果创建失败执行拒绝策略
+         */
         else if (!addWorker(command, false))
             reject(command);
     }
